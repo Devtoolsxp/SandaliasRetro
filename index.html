@@ -10,7 +10,7 @@
             background-color: #040404; /* Fundo escuro */
             color: #ffd700; /* Texto dourado */
             margin: 0;
-            padding: 1px;
+            padding: 0;
         }
         .container {
             display: flex;
@@ -21,16 +21,11 @@
             background-color: #a9a9a9;
             border: 1px solid #ddd;
             border-radius: 10px;
-            padding: 2px;
-            width: calc(100% / 1 - 20px); /* Default para mobile */
+            padding: 10px;
+            width: calc(100% / 2 - 20px);
             box-sizing: border-box;
             cursor: pointer;
-        }
-
-        @media (min-width: 768px) {
-            .shoe-post {
-                width: calc(100% / 10 - 0px);
-            }
+            text-align: center;
         }
 
         .shoe-post img {
@@ -83,22 +78,17 @@
     <div class="container">
         <script>
             const shoePostsContainer = document.querySelector('.container');
-            const numberOfShoes = 55; // Altere conforme necessário
+            const numberOfShoes = 47; // Número de fotos
             for (let i = 1; i <= numberOfShoes; i++) {
                 const imgSrc = `img/REF_0${i}.jpeg`;
-                const img = new Image();
-                img.src = imgSrc;
-
-                img.onload = function () {
-                    const post = document.createElement('div');
-                    post.className = 'shoe-post';
-                    post.innerHTML = `
-                        <img src="${imgSrc}" alt="Calçado ${i}">
-                        <h4 style="text-align: center;">ADICIONAR</h4>
-                    `;
-                    post.addEventListener('click', () => openPopup(i));
-                    shoePostsContainer.appendChild(post);
-                };
+                const post = document.createElement('div');
+                post.className = 'shoe-post';
+                post.innerHTML = `
+                    <img src="${imgSrc}" alt="Calçado ${i}">
+                    <h4>Adicionar Pedido</h4>
+                `;
+                post.addEventListener('click', () => openPopup(i));
+                shoePostsContainer.appendChild(post);
             }
         </script>
     </div>
@@ -108,23 +98,23 @@
             <h2>Fazer Pedido</h2>
             <p id="popupRef">Ref: </p>
             <form id="orderForm">
-                <div class="form-group">
-                    <label for="shoeSize">Numeração</label>
+                <div>
+                    <label for="shoeSize">Numeração:</label>
                     <select id="shoeSize" name="shoeSize">
                         <script>
-                            for (let i = 25; i <= 50; i++) {
+                            for (let i = 25; i <= 45; i++) {
                                 document.write(`<option value="${i}">${i}</option>`);
                             }
                         </script>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="quantity">Quantidade de Pares</label>
+                <div>
+                    <label for="quantity">Quantidade:</label>
                     <input type="number" id="quantity" name="quantity" min="1">
                 </div>
-                <div class="form-actions">
+                <div>
                     <button type="button" onclick="closePopup()">Cancelar</button>
-                    <button type="submit">Salvar Pedido</button>
+                    <button type="submit">Salvar</button>
                 </div>
             </form>
         </div>
@@ -134,8 +124,8 @@
         <div class="popup-list-content">
             <h3>Pedidos</h3>
             <div id="orderList"></div>
-            <button type="button" onclick="closeOrderListPopup()">Fechar</button>
-            <button type="button" onclick="sendOrders()">Enviar Pedidos</button>
+            <button onclick="closeOrderListPopup()">Fechar</button>
+            <button onclick="sendOrders()">Enviar Pedidos</button>
         </div>
     </div>
 
@@ -176,7 +166,7 @@
             const shoeSize = document.getElementById('shoeSize').value;
             const quantity = parseInt(document.getElementById('quantity').value);
 
-            if (!shoeSize || !quantity || quantity <= 0) {
+            if (!shoeSize || quantity <= 0) {
                 alert('Preencha os campos corretamente.');
                 return;
             }
@@ -192,26 +182,26 @@
         function updateOrderList() {
             orderList.innerHTML = '';
             let totalPairs = 0;
-            let totalOrderValue = 0;
+            let totalPrice = 0;
 
             Object.keys(orders).forEach(ref => {
-                const orderItem = document.createElement('div');
-                orderItem.innerHTML = `<h4>REF: ${ref}</h4><ul></ul>`;
-                const ul = orderItem.querySelector('ul');
+                const sizes = orders[ref];
+                const refElement = document.createElement('div');
+                refElement.innerHTML = `<h4>Ref: ${ref}</h4><ul></ul>`;
+                const ul = refElement.querySelector('ul');
 
-                Object.keys(orders[ref]).forEach(size => {
-                    const quantity = orders[ref][size];
-                    totalPairs += quantity;
-                    ul.innerHTML += `<li>${size} - ${quantity} pares</li>`;
+                Object.keys(sizes).forEach(size => {
+                    const qty = sizes[size];
+                    totalPairs += qty;
+                    ul.innerHTML += `<li>${size} - ${qty} pares</li>`;
                 });
 
-                orderList.appendChild(orderItem);
+                orderList.appendChild(refElement);
             });
 
-            totalOrderValue = totalPairs * (totalPairs >= DISCOUNT_THRESHOLD ? DISCOUNTED_PRICE : REGULAR_PRICE);
-
+            totalPrice = totalPairs * (totalPairs >= DISCOUNT_THRESHOLD ? DISCOUNTED_PRICE : REGULAR_PRICE);
             const totalElement = document.createElement('div');
-            totalElement.innerHTML = `<h3>Total do Pedido: R$ ${(totalOrderValue).toFixed(2)}</h3>`;
+            totalElement.innerHTML = `<h3>Total: R$ ${totalPrice.toFixed(2)}</h3>`;
             orderList.appendChild(totalElement);
         }
 
@@ -219,14 +209,14 @@
             const whatsappMessage = Object.keys(orders)
                 .map(ref => `REF: ${ref}\n${Object.keys(orders[ref]).map(size => `${size} - ${orders[ref][size]} pares`).join('\n')}`)
                 .join('\n\n');
+            
+            const totalPairs = Object.values(orders).reduce((sum, sizes) => 
+                sum + Object.values(sizes).reduce((s, qty) => s + qty, 0), 0);
 
-            const totalPairs = Object.values(orders).reduce((total, refOrders) =>
-                total + Object.values(refOrders).reduce((sum, qty) => sum + qty, 0), 0);
-
-            const totalValue = totalPairs * (totalPairs >= DISCOUNT_THRESHOLD ? DISCOUNTED_PRICE : REGULAR_PRICE);
-            const message = `${whatsappMessage}\n\nTotal: R$ ${(totalValue).toFixed(2)}`;
-
+            const totalPrice = totalPairs * (totalPairs >= DISCOUNT_THRESHOLD ? DISCOUNTED_PRICE : REGULAR_PRICE);
+            const message = `${whatsappMessage}\n\nTotal: R$ ${totalPrice.toFixed(2)}`;
             const phoneNumber = "+5534999132631";
+
             const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
         }
