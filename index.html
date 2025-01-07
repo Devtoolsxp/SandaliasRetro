@@ -281,13 +281,12 @@
     <button class="floating-btn" onclick="openOrderListPopup()">Pedidos</button>
 
     <script>
-        const PRICE_PER_PAIR = 69.90; // Preço de cada par
+        const REGULAR_PRICE = 69.90; // Preço regular de cada par
+        const DISCOUNTED_PRICE = 45.00; // Preço com desconto por par
         const popup = document.getElementById('popup');
         const popupList = document.getElementById('popupList');
         const orderList = document.getElementById('orderList');
         let currentShoe = null;
-        let currentEditRef = null;
-        let currentEditSize = null;
         const orders = {};
 
         function openPopup(shoeNumber) {
@@ -335,6 +334,7 @@
         function updateOrderList() {
             orderList.innerHTML = '';
             let totalOrderValue = 0;
+            let totalSavings = 0;
 
             Object.keys(orders).forEach(ref => {
                 const orderItem = document.createElement('div');
@@ -343,7 +343,16 @@
                 const ul = orderItem.querySelector('ul');
                 Object.keys(orders[ref]).forEach(size => {
                     const quantity = orders[ref][size];
-                    const itemTotal = quantity * PRICE_PER_PAIR;
+                    let pricePerPair = REGULAR_PRICE;
+                    let itemTotal = quantity * pricePerPair;
+
+                    // Verificar se há desconto
+                    if (quantity >= 10) {
+                        pricePerPair = DISCOUNTED_PRICE;
+                        itemTotal = quantity * pricePerPair;
+                        totalSavings += (REGULAR_PRICE - DISCOUNTED_PRICE) * quantity; // Calcular economia
+                    }
+
                     totalOrderValue += itemTotal;
 
                     const li = document.createElement('li');
@@ -362,11 +371,17 @@
             totalElement.style.color = "gold";
             totalElement.innerHTML = `<h3>Total do Pedido: R$ ${(totalOrderValue).toFixed(2)}</h3>`;
             orderList.appendChild(totalElement);
+
+            if (totalSavings > 0) {
+                const savingsElement = document.createElement('div');
+                savingsElement.style.marginTop = "10px";
+                savingsElement.style.color = "green";
+                savingsElement.innerHTML = `<h4>Economia: R$ ${(totalSavings).toFixed(2)}</h4>`;
+                orderList.appendChild(savingsElement);
+            }
         }
 
         function openEditPopup(ref, size) {
-            currentEditRef = ref;
-            currentEditSize = size;
             const quantity = orders[ref][size];
             document.getElementById('shoeSize').value = size;
             document.getElementById('quantity').value = quantity;
@@ -389,19 +404,31 @@
         function sendOrders() {
             let message = "Pedidos:\n";
             let totalOrderValue = 0;
+            let totalSavings = 0;
 
             Object.keys(orders).forEach(ref => {
                 message += `REF: ${ref}\n`;
                 Object.keys(orders[ref]).forEach(size => {
                     const quantity = orders[ref][size];
-                    const itemTotal = quantity * PRICE_PER_PAIR;
-                    totalOrderValue += itemTotal;
+                    let pricePerPair = REGULAR_PRICE;
+                    let itemTotal = quantity * pricePerPair;
 
+                    // Verificar se há desconto
+                    if (quantity >= 10) {
+                        pricePerPair = DISCOUNTED_PRICE;
+                        itemTotal = quantity * pricePerPair;
+                        totalSavings += (REGULAR_PRICE - DISCOUNTED_PRICE) * quantity; // Calcular economia
+                    }
+
+                    totalOrderValue += itemTotal;
                     message += `N: ${size} - ${quantity} pares (R$ ${(itemTotal).toFixed(2)})\n`;
                 });
             });
 
             message += `\nTotal do Pedido: R$ ${(totalOrderValue).toFixed(2)}`;
+            if (totalSavings > 0) {
+                message += `\nEconomia: R$ ${(totalSavings).toFixed(2)}`;
+            }
 
             const phoneNumber = "+5534999132631";
             const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
