@@ -349,7 +349,7 @@
                     const li = document.createElement('li');
                     li.innerHTML = `
                         ${size} - ${quantity} pares (R$ ${(itemTotal).toFixed(2)})
-                        <button class="edit-btn" onclick="openEditPopup(${ref}, ${size})">Editar Numeração</button>
+                        <button class="edit-btn" onclick="openEditPopup(${ref}, ${size})">Editar</button>
                         <button onclick="removeSize(${ref}, ${size})">X</button>
                     `;
                     ul.appendChild(li);
@@ -362,6 +362,28 @@
             totalElement.style.color = "gold";
             totalElement.innerHTML = `<h3>Total do Pedido: R$ ${(totalOrderValue).toFixed(2)}</h3>`;
             orderList.appendChild(totalElement);
+        }
+
+        function openEditPopup(ref, size) {
+            currentEditRef = ref;
+            currentEditSize = size;
+            const quantity = orders[ref][size];
+            document.getElementById('shoeSize').value = size;
+            document.getElementById('quantity').value = quantity;
+            popup.style.display = 'flex';
+        }
+
+        function removeSize(ref, size) {
+            delete orders[ref][size];
+            if (Object.keys(orders[ref]).length === 0) {
+                delete orders[ref];
+            }
+            updateOrderList();
+        }
+
+        function removeReference(ref) {
+            delete orders[ref];
+            updateOrderList();
         }
 
         function sendOrders() {
