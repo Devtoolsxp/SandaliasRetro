@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido de Calçados</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- Biblioteca jsPDF -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            z-index: 100;
+        }
+
+        .popup button {
+            margin-top: 10px;
+        }
+
+        .order-item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .order-item button {
+            margin-left: 5px;
+        }
+
+        .remove-ref {
+            background-color: red;
+            color: white;
+            padding: 5px;
+        }
+
+        .edit-btn {
+            background-color: orange;
+            color: white;
+            padding: 5px;
+        }
+
+        .send-btn {
+            background-color: green;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .send-btn:hover {
+            background-color: darkgreen;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pedido de Calçados</h1>
+
+    <!-- Formulário de pedido -->
+    <div id="popup" class="popup">
+        <h3>Editar Pedido</h3>
+        <label for="shoeSize">Tamanho:</label>
+        <input type="text" id="shoeSize" name="shoeSize">
+        <label for="quantity">Quantidade:</label>
+        <input type="number" id="quantity" name="quantity">
+        <button onclick="saveEdit()">Salvar Edição</button>
+        <button onclick="closePopup()">Fechar</button>
+    </div>
+
+    <div id="orderList"></div>
+    <button class="send-btn" onclick="sendOrders()">Enviar Pedido para WhatsApp</button>
+
+    <script>
+        const REGULAR_PRICE = 69.90; // Preço regular de cada par
+        const DISCOUNTED_PRICE = 45.00; // Preço com desconto por par
+        const orders = {}; // Armazenamento de pedidos
+
+        let currentShoe = null; // Para saber qual pedido está sendo editado
+
+        // Função para adicionar um pedido
+        function addOrder(ref, size, quantity) {
+            if (!orders[ref]) {
+                orders[ref] = {};
+            }
+            if (orders[ref][size]) {
+                orders[ref][size] += quantity;
+            } else {
+                orders[ref][size] = quantity;
+            }
+
+            updateOrderList();
+        }
+
+        // Função para gerar PDF da nota
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let totalOrderValue = 0;
+            let totalSavings = 0;
+            let itemCount = 0;
+
+            doc.text("Nota de Pedido", 20, 10);
+            doc.text("=================================", 20, 20);
+
+            Object.keys(orders).forEach(ref => {
+                doc.text(`REF: ${ref}`, 20, 30 + (itemCount * 10));
+                Object.keys(orders[ref]).forEach(size => {
+                    const quantity = orders[ref][size];
+                    let pricePerPair = REGULAR_PRICE;
+                    let itemTotal = quantity * pricePerPair;
+
+                    // Verificar se há desconto
+                    if (quantity >= 10) {
+                        pricePerPair = DISCOUNTED_PRICE;
+                        itemTotal = quantity * pricePerPair;
+                        totalSavings += (REGULAR_PRICE - DISCOUNTED_PRICE) * quantity;
+                    }
+
+                    totalOrderValue += itemTotal;
+                    doc.text(`${size} - ${quantity} pares (R$ ${(itemTotal).toFixed(2)})`, 20, 40 + (itemCount * 10));
+                    itemCount++;
+                });
+            });
+
+            const totalElement = `Total do Pedido: R$ ${(totalOrderValue).toFixed(2)}`;
+            doc.text(totalElement, 20, 50 + (itemCount * 10));
+
+            if (totalSavings > 0) {
+                const savingsElement = `Economia: R$ ${(totalSavings).toFixed(2)}`;
+                doc.text(savingsElement, 20, 60 + (itemCount * 10));
+            }
+
+            const pdfUrl = doc.output('bloburl');
+            return pdfUrl;
+        }
+
+        // Função para enviar o pedido para o WhatsApp
+        function sendOrders() {
+            const pdfUrl = generatePDF();
+            let message = "Pedidos:\n";
+            let totalOrderValue = 0;
+            let totalSavings = 0;
+
+            Object.keys(orders).forEach(ref => {
+                message += `REF: ${ref}\n`;
+                Object.keys(orders[ref]).forEach(size => {
+                    const quantity = orders[ref][size];
+                    let pricePerPair = REGULAR_PRICE;
+                    let itemTotal = quantity * pricePerPair;
+
+                    // Verificar se há desconto
+                    if (quantity >= 10) {
+                        pricePerPair = DISCOUNTED_PRICE;
+                        itemTotal = quantity * pricePerPair;
+                        totalSavings += (REGULAR_PRICE - DISCOUNTED_PRICE) * quantity;
+                    }
+
+                    totalOrderValue += itemTotal;
+                    message += `Tamanho: ${size} - ${quantity} pares (R$ ${(itemTotal).toFixed(2)})\n`;
+                });
+            });
+
+            message += `\nTotal do Pedido: R$ ${(totalOrderValue).toFixed(2)}`;
+            if (totalSavings > 0) {
+                message += `\nEconomia: R$ ${(totalSavings).toFixed(2)}`;
+            }
+
+            const phoneNumber = "+5534999132631"; // Substitua pelo número de telefone
+            const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}%0A%0A${encodeURIComponent(pdfUrl)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Função para atualizar a lista de pedidos
+        function updateOrderList() {
+            const orderList = document.getElementById('orderList');
+            orderList.innerHTML = '';
+            let totalOrderValue = 0;
+            let totalSavings = 0;
+
+            Object.keys(orders).forEach(ref => {
+                const orderItem = document.createElement('div');
+                orderItem.className = 'order-item';
+                orderItem.innerHTML = `<h4>REF: ${ref}</h4><ul></ul><button class="remove-ref" onclick="removeReference('${ref}')">Remover Modelo</button>`;
+                const ul = orderItem.querySelector('ul');
+                Object.keys(orders[ref]).forEach(size => {
+                    const quantity = orders[ref][size];
+                    let pricePerPair = REGULAR_PRICE;
+                    let itemTotal = quantity * pricePerPair;
+
+                    // Verificar se há desconto
+                    if (quantity >= 10) {
+                        pricePerPair = DISCOUNTED_PRICE;
+                        itemTotal = quantity * pricePerPair;
+                        totalSavings += (REGULAR_PRICE - DISCOUNTED_PRICE) * quantity;
+                    }
+
+                    totalOrderValue += itemTotal;
+
+                    const li = document.createElement('li');
+                    li.innerHTML = `${size} - ${quantity} pares (R$ ${(itemTotal).toFixed(2)}) 
+                        <button class="edit-btn" onclick="openEditPopup('${ref}', '${size}')">Editar</button>
+                        <button onclick="removeSize('${ref}', '${size}')">X</button>`;
+                    ul.appendChild(li);
+                });
+                orderList.appendChild(orderItem);
+            });
+
+            const totalElement = document.createElement('div');
+            totalElement.style.marginTop = "20px";
+            totalElement.style.color = "gold";
+            totalElement.innerHTML = `<h3>Total do Pedido: R$ ${(totalOrderValue).toFixed(2)}</h3>`;
+            orderList.appendChild(totalElement);
+
+            if (totalSavings > 0) {
+                const savingsElement = document.createElement('div');
+                savingsElement.style.marginTop = "10px";
+                savingsElement.style.color = "green";
+                savingsElement.innerHTML = `<h4>Economia: R$ ${(totalSavings).toFixed(2)}</h4>`;
+                orderList.appendChild(savingsElement);
+            }
+        }
+
+        // Função para editar um pedido
+        function openEditPopup(ref, size) {
+            currentShoe = { ref, size };
+            const quantity = orders[ref][size];
+            document.getElementById('shoeSize').value = size;
+            document.getElementById('quantity').value = quantity;
+            document.getElementById('popup').style.display = 'block';
+        }
+
+        // Função para salvar a edição
+        function saveEdit() {
+            const size = document.getElementById('shoeSize').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const { ref } = currentShoe;
+
+            // Atualiza a quantidade no pedido
+            orders[ref][size] = quantity;
+            updateOrderList();
+            closePopup();
+        }
+
+        // Função para fechar o popup
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+
+        // Função para remover um tamanho de um pedido
+        function removeSize(ref, size) {
+            delete orders[ref][size];
+            if (Object.keys(orders[ref]).length === 0) {
+                delete orders[ref];
+            }
+            updateOrderList();
+        }
+
+        // Função para remover um modelo do pedido
+        function removeReference(ref) {
+            delete orders[ref];
+            updateOrderList();
+        }
+
+        // Adicione alguns pedidos para testar
+        addOrder('123', '40', 5);
+        addOrder('123', '42', 12);
+        addOrder('456', '38', 8);
+    </script>
+</body>
+</html>
