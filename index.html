@@ -7,28 +7,29 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #040404; /* Fundo escuro */
-            color: #ffd700; /* Texto em dourado */
+            background-color: #040404;
+            color: #ffd700;
             margin: 0;
             padding: 1px;
         }
+
         .container {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
         }
+
         .shoe-post {
             background-color: #a9a9a9;
             border: 1px solid #ddd;
             border-radius: 10px;
             padding: 2px;
-            width: calc(100% / 1 - 20px); /* Default para mobile */
+            width: calc(100% / 1 - 20px);
             box-sizing: border-box;
             cursor: pointer;
         }
 
         @media (min-width: 768px) {
-            /* Para desktops e tablets */
             .shoe-post {
                 width: calc(100% / 10 - 0px);
             }
@@ -39,7 +40,7 @@
             border-radius: 10px;
         }
 
-        .popup {
+        .popup, .popup-list {
             display: none;
             position: fixed;
             top: 0;
@@ -49,10 +50,9 @@
             background-color: rgba(0, 0, 0, 0.5);
             justify-content: center;
             align-items: center;
-            z-index: 1000; /* Z-index para popups */
         }
 
-        .popup-content {
+        .popup-content, .popup-list-content {
             background-color: #2c2c2c;
             padding: 20px;
             border-radius: 10px;
@@ -61,7 +61,7 @@
             box-sizing: border-box;
         }
 
-        .popup-content h2 {
+        .popup-content h2, .popup-list-content h3 {
             margin-top: 0;
         }
 
@@ -75,12 +75,6 @@
         }
 
         .popup-content .form-group input {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-        }
-
-        .popup-content .form-group select {
             width: 100%;
             padding: 8px;
             box-sizing: border-box;
@@ -107,10 +101,6 @@
             margin-top: 20px;
         }
 
-        .order-list h3 {
-            margin-top: 0;
-        }
-
         .order-item {
             background-color: #040404;
             border: 1px solid #ddd;
@@ -119,106 +109,26 @@
             margin-bottom: 10px;
         }
 
-        .order-item h4 {
-            margin: 0;
-        }
-
-        .order-item ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 5px 0 0 0;
-        }
-
-        .order-item ul li {
-            margin: 5px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .order-item ul li button {
-            padding: 3px 8px;
-            border: none;
-            background-color: #dc3545;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-
-        .order-item ul li .edit-btn {
-            background-color: #007bff;
-        }
-
-        .order-item .remove-ref {
-            margin-top: 10px;
-            padding: 5px 10px;
-            border: none;
-            background-color: #dc3545;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-        }
-
-        .shoe-post {
-            margin: 10px;
-            cursor: pointer;
-        }
-
-        .popup, .popup-list {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-        }
-
-        .popup-list-content {
-            background-color: #2c2c2c;
-            padding: 20px;
-            border-radius: 10px;
-            width: 100%;
-            height: 100%;
-            overflow-y: auto;
-            box-sizing: border-box;
-        }
-
         .floating-btn {
             position: fixed;
-            bottom: 0px;
-            right: 0px;
+            bottom: 20px;
+            right: 20px;
             background: green;
             color: white;
             border: none;
             border-radius: 5px;
-            width: 30%;
-            height: auto;
-            padding: 10px 8px;
+            padding: 10px 20px;
             cursor: pointer;
-            font-size: 20px;
-            text-align: center;
-            overflow: hidden;
-            z-index: 100000000000000;
+            font-size: 16px;
+            z-index: 1000;
         }
-
-        .form-actions {
-            margin-top: 20px;
-        }        
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Gerar 47 posts de calçados -->
         <script>
             const shoePostsContainer = document.querySelector('.container');
-            const numberOfShoes = 55; // Altere o número conforme necessário
+            const numberOfShoes = 55;
             for (let i = 1; i <= numberOfShoes; i++) {
                 const imgSrc = `img/REF_0${i}.jpeg`;
                 const img = new Image();
@@ -234,10 +144,6 @@
                     post.addEventListener('click', () => openPopup(i));
                     shoePostsContainer.appendChild(post);
                 };
-
-                img.onerror = function() {
-                    //console.log(`Imagem não encontrada para REF_0${i}.jpeg`);
-                };
             }
         </script>
     </div>
@@ -248,22 +154,12 @@
             <p id="popupRef">Ref: </p>
             <form id="orderForm">
                 <div class="form-group">
-                    <label for="shoeSize">Numeração</label>
-                    <select id="shoeSize" name="shoeSize">
-                        <script>
-                            for (let i = 25; i <= 50; i++) {
-                                document.write(`<option value="${i}">${i}</option>`);
-                            }
-                        </script>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label for="quantity">Quantidade de Pares</label>
-                    <input type="number" id="quantity" name="quantity" min="1" max="10">
+                    <input type="number" id="quantity" name="quantity" min="1" required>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="close" onclick="closePopup()">Cancelar</button>
-                    <button type="submit">Adicionar Pedido</button>
+                    <button type="submit">Adicionar</button>
                 </div>
             </form>
         </div>
@@ -281,8 +177,8 @@
     <button class="floating-btn" onclick="openOrderListPopup()">Pedidos</button>
 
     <script>
-        const REGULAR_PRICE = 69.90; // Preço regular de cada par
-        const DISCOUNTED_PRICE = 45.00; // Preço com desconto por par
+        const REGULAR_PRICE = 69.90;
+        const DISCOUNTED_PRICE = 45.00;
         const popup = document.getElementById('popup');
         const popupList = document.getElementById('popupList');
         const orderList = document.getElementById('orderList');
@@ -292,7 +188,6 @@
         function openPopup(shoeNumber) {
             currentShoe = shoeNumber;
             document.getElementById('popupRef').textContent = `Ref: ${shoeNumber}`;
-            document.getElementById('orderForm').reset();
             popup.style.display = 'flex';
         }
 
@@ -311,130 +206,66 @@
 
         document.getElementById('orderForm').addEventListener('submit', function(event) {
             event.preventDefault();
-            const shoeSize = document.getElementById('shoeSize').value;
-            const quantity = document.getElementById('quantity').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
 
-            if (!shoeSize || !quantity) {
+            if (!quantity) {
                 alert('Por favor, preencha todos os campos.');
                 return;
             }
 
             if (!orders[currentShoe]) {
-                orders[currentShoe] = {};
+                orders[currentShoe] = 0;
             }
 
-            if (!orders[currentShoe][shoeSize]) {
-                orders[currentShoe][shoeSize] = 0;
-            }
-
-            orders[currentShoe][shoeSize] += parseInt(quantity);
+            orders[currentShoe] += quantity;
             closePopup();
         });
 
         function updateOrderList() {
             orderList.innerHTML = '';
+            let totalPairs = 0;
             let totalOrderValue = 0;
-            let totalSavings = 0;
 
             Object.keys(orders).forEach(ref => {
+                const quantity = orders[ref];
+                totalPairs += quantity;
+
                 const orderItem = document.createElement('div');
                 orderItem.className = 'order-item';
-                orderItem.innerHTML = `<h4>REF: ${ref}</h4><ul></ul><button class="remove-ref" onclick="removeReference(${ref})">Remover Modelo</button>`;
-                const ul = orderItem.querySelector('ul');
-                Object.keys(orders[ref]).forEach(size => {
-                    const quantity = orders[ref][size];
-                    let pricePerPair = REGULAR_PRICE;
-                    let itemTotal = quantity * pricePerPair;
-
-                    // Verificar se há desconto
-                    if (quantity >= 10) {
-                        pricePerPair = DISCOUNTED_PRICE;
-                        itemTotal = quantity * pricePerPair;
-                        totalSavings += (REGULAR_PRICE - DISCOUNTED_PRICE) * quantity; // Calcular economia
-                    }
-
-                    totalOrderValue += itemTotal;
-
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        ${size} - ${quantity} pares (R$ ${(itemTotal).toFixed(2)})
-                        <button class="edit-btn" onclick="openEditPopup(${ref}, ${size})">Editar</button>
-                        <button onclick="removeSize(${ref}, ${size})">X</button>
-                    `;
-                    ul.appendChild(li);
-                });
+                orderItem.innerHTML = `
+                    <h4>REF: ${ref}</h4>
+                    <p>Quantidade: ${quantity}</p>
+                `;
                 orderList.appendChild(orderItem);
             });
 
+            const pricePerPair = totalPairs >= 10 ? DISCOUNTED_PRICE : REGULAR_PRICE;
+            totalOrderValue = totalPairs * pricePerPair;
+
             const totalElement = document.createElement('div');
-            totalElement.style.marginTop = "20px";
-            totalElement.style.color = "gold";
             totalElement.innerHTML = `<h3>Total do Pedido: R$ ${(totalOrderValue).toFixed(2)}</h3>`;
             orderList.appendChild(totalElement);
-
-            if (totalSavings > 0) {
-                const savingsElement = document.createElement('div');
-                savingsElement.style.marginTop = "10px";
-                savingsElement.style.color = "green";
-                savingsElement.innerHTML = `<h4>Economia: R$ ${(totalSavings).toFixed(2)}</h4>`;
-                orderList.appendChild(savingsElement);
-            }
-        }
-
-        function openEditPopup(ref, size) {
-            const quantity = orders[ref][size];
-            document.getElementById('shoeSize').value = size;
-            document.getElementById('quantity').value = quantity;
-            popup.style.display = 'flex';
-        }
-
-        function removeSize(ref, size) {
-            delete orders[ref][size];
-            if (Object.keys(orders[ref]).length === 0) {
-                delete orders[ref];
-            }
-            updateOrderList();
-        }
-
-        function removeReference(ref) {
-            delete orders[ref];
-            updateOrderList();
         }
 
         function sendOrders() {
-            let message = "Pedidos:\n";
-            let totalOrderValue = 0;
-            let totalSavings = 0;
+            let message = 'Pedidos:\n';
+            let totalPairs = 0;
 
             Object.keys(orders).forEach(ref => {
-                message += `REF: ${ref}\n`;
-                Object.keys(orders[ref]).forEach(size => {
-                    const quantity = orders[ref][size];
-                    let pricePerPair = REGULAR_PRICE;
-                    let itemTotal = quantity * pricePerPair;
-
-                    // Verificar se há desconto
-                    if (quantity >= 10) {
-                        pricePerPair = DISCOUNTED_PRICE;
-                        itemTotal = quantity * pricePerPair;
-                        totalSavings += (REGULAR_PRICE - DISCOUNTED_PRICE) * quantity; // Calcular economia
-                    }
-
-                    totalOrderValue += itemTotal;
-                    message += `N: ${size} - ${quantity} pares (R$ ${(itemTotal).toFixed(2)})\n`;
-                });
+                const quantity = orders[ref];
+                totalPairs += quantity;
+                message += `REF: ${ref} - ${quantity} pares\n`;
             });
 
-            message += `\nTotal do Pedido: R$ ${(totalOrderValue).toFixed(2)}`;
-            if (totalSavings > 0) {
-                message += `\nEconomia: R$ ${(totalSavings).toFixed(2)}`;
-            }
+            const pricePerPair = totalPairs >= 10 ? DISCOUNTED_PRICE : REGULAR_PRICE;
+            const totalOrderValue = totalPairs * pricePerPair;
 
-            const phoneNumber = "+5534999132631";
+            message += `\nTotal do Pedido: R$ ${(totalOrderValue).toFixed(2)}`;
+
+            const phoneNumber = '+5534999132631';
             const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
         }
     </script>
 </body>
-</html>ao editar pedido ele deve editar somente quantidade e deve atualizar ao editar 
-E desconto será dado com soma total de pares independentes da referência 
+</html>
